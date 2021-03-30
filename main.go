@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -71,14 +72,22 @@ func main() {
 		}
 
 		created_time := c.DefaultQuery("created_time", strconv.FormatInt(timeline[0].CreatedTime, 10))
+		wType := c.DefaultQuery("type", "0")
 
-		created_time2, err := strconv.ParseInt(created_time, 10, 64)
+		wType2, err := strconv.Atoi(strings.TrimSpace(wType))
 		if err != nil {
-			log.Fatalln(err.Error())
+			fmt.Println("解析参数出错，将使用默认值", err.Error())
+			wType2 = 0
+		}
+
+		created_time2, err := strconv.ParseInt(strings.TrimSpace(created_time), 10, 64)
+		if err != nil {
+			fmt.Println("解析参数出错，将使用默认值", err.Error())
+			created_time2 = timeline[0].CreatedTime
 		}
 		fmt.Println("created_time2:", created_time2)
 
-		items := getData(created_time2)
+		items := getData(created_time2, wType2)
 
 		// 转换时间线数据格式
 		var timeArray []int64
@@ -99,8 +108,8 @@ func main() {
 }
 
 // 时间戳
-func getData(created_time int64) []Item {
+func getData(created_time int64, wType int) []Item {
 	batch := []Item{}
-	recordCol.Find(ctx, bson.M{"created_time": created_time}).All(&batch)
+	recordCol.Find(ctx, bson.M{"created_time": created_time, "type": wType}).All(&batch)
 	return batch
 }
