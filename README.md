@@ -1,0 +1,1 @@
+now dev --debug --listen 8080
